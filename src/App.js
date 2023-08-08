@@ -1,13 +1,17 @@
+import React, {Suspense} from 'react';
 import './App.css';
 
 import { useState } from 'react';
 
 import Page1 from './components/Page1';
 
+// Using react lazy to dynamically load components
+const Page2Lazy = React.lazy(() => import('./components/Page2'));
+const Page3Lazy = React.lazy(() => import('./components/Page3'));
+
 // We will use this to set and use the state for the route and component.
 const initialDetails = {
-  route: 'page1',
-  component: null,
+  route: 'page1'
 };
 
 const App = () => {
@@ -21,23 +25,13 @@ const App = () => {
       return setDetails(initialDetails);
     }
 
-    // Dynamically load component via code splitting
-    // Note that in order to access the component itself, you must use .default
-    // Remember import returns a promise
+    // Set the route according to what's coming from children components when user clicks buttons
     switch (route) {
       case 'page2':
-        const page2 = await import('./components/Page2');
-        setDetails({
-          route,
-          component: page2.default,
-        });
+        setDetails({route});
         break;
       case 'page3':
-        const page3 = await import('./components/Page3');
-        setDetails({
-          route,
-          component: page3.default,
-        });
+        setDetails({route});
         break;
       default:
         // Do nothing
@@ -45,17 +39,25 @@ const App = () => {
     }
   };
 
-  // Render page 1 as a default component
+  // Render page 1 as a default component and render the rest with react lazy
+  // Lazy/Dynamic components should be wrapped with Suspense so that a fallback component is rendered while loading lazy components
   if (details.route === 'page1') {
     return(
       <Page1 onRouteChange={handleRouteChange} />
     );
+  } else if (details.route === 'page2') {
+    return(
+      <Suspense fallback={<div>Loading component...</div>}>
+        <Page2Lazy onRouteChange={handleRouteChange} />
+      </Suspense>
+    );
+  } else if (details.route === 'page3') {
+    return(
+      <Suspense fallback={<div>Loading component...</div>}>
+        <Page3Lazy onRouteChange={handleRouteChange} />
+      </Suspense>
+    );
   }
-
-  // Dynamically load component based on route passed by children
-  return (
-    <details.component onRouteChange={handleRouteChange} />
-  );
 };
 
 export default App;
